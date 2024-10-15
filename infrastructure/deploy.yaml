@@ -1,0 +1,46 @@
+name: Deploy CloudFormation
+
+on:
+  push:
+    paths:
+      - main.yaml 
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v2
+
+    - name: Set up AWS CLI
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: AKIAV6JGUN4BT3YVCKFI
+        aws-secret-access-key: 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
+        aws-region: us-east-1  
+
+    - name: Validate CloudFormation Template
+      run: |
+        aws cloudformation validate-template --template-body file://main.yaml
+      continue-on-error: false
+
+    - name: Deploy to CloudFormation
+      run: |
+        STACK_NAME=IndexStack  # The CloudFormation stack name
+        TEMPLATE_FILE=main.yaml
+        CHANGE_SET_NAME=deploy-$(date +%s)
+        
+        # Create a change set for the update
+        aws cloudformation create-change-set \
+          --stack-name $STACK_NAME \
+          --template-body file://$TEMPLATE_FILE \
+          --change-set-name $CHANGE_SET_NAME \
+          --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM
+        
+        # Wait for the change set to complete
+        aws cloudformation wait change-set-executed \
+          --stack-name $STACK_NAME \
+          --change-set-name $CHANGE_SET_NAME
+
+        echo "CloudFormation change set applied successfully."
