@@ -26,7 +26,7 @@ jobs:
       uses: aws-actions/aws-cloudformation-github-deploy@v1
       with:
         name: -${{ steps.extract_branch.outputs.branch }}
-        template: infrastructure/main.yaml
+        template: ./infrastructure/main.yaml
         capabilities: CAPABILITY_NAMED_IAM
         no-fail-on-empty-changeset: "1"
        
