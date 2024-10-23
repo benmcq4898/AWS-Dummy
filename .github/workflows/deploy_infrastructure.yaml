@@ -2,9 +2,9 @@ name: Deploy Infrastructure
 
 on:
   push:
-    branches: infrastructure
+    branches: main
     paths:
-      - "main/**"
+      - "infrastructure/**"
 
 jobs:
   deploy:
