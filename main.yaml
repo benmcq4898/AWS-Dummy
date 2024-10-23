@@ -23,7 +23,7 @@ Resources:
         PriceClass: PriceClass_100 # Optional, to define the price class for the distribution
         Comment: My CloudFront Distribution with S3 Origin
 
-  IndexBucket:
+  GitBucket:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: cloudformationbucket84352
