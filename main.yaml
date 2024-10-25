@@ -1,0 +1,65 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+
+  MyCloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    DependsOn:
+      - GitBucket
+      - DefaultCachePolicy
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        Origins:
+          - Id: GitBucket
+            DomainName: !GetAtt GitBucket.DomainName
+            S3OriginConfig:
+              OriginAccessIdentity: '' # Optionally, you can provide an OAI (Origin Access Identity) for private access
+        DefaultCacheBehavior:
+          TargetOriginId: GitBucket
+          ViewerProtocolPolicy: allow-all
+          CachePolicyId: !Ref DefaultCachePolicy
+        ViewerCertificate:
+          CloudFrontDefaultCertificate: true
+        PriceClass: PriceClass_100 # Optional, to define the price class for the distribution
+        Comment: My CloudFront Distribution with S3 Origin
+
+  GitBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: cloudformationbucket84352
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
+      VersioningConfiguration:
+        Status: Enabled
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      WebsiteConfiguration:
+        IndexDocument: index.html
+
+  DefaultCachePolicy:
+    Type: AWS::CloudFront::CachePolicy
+    Properties:
+      CachePolicyConfig:
+        Name: git-cache-policy
+        DefaultTTL: 10
+        MaxTTL: 10
+        MinTTL: 1
+        ParametersInCacheKeyAndForwardedToOrigin:
+          CookiesConfig:
+            CookieBehavior: none
+          EnableAcceptEncodingBrotli: true
+          EnableAcceptEncodingGzip: true
+          HeadersConfig:
+            HeaderBehavior: none
+          QueryStringsConfig:
+            QueryStringBehavior: none
+
+Outputs:
+  CloudFrontURL:
+    Value: https://drf2mowams5v2.cloudfront.net
+    Description: URL of the CloudFront distribution 
