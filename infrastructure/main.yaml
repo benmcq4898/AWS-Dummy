@@ -4,18 +4,18 @@ Resources:
   MyCloudFrontDistribution:
     Type: AWS::CloudFront::Distribution
     DependsOn:
-      - IndexBucket
+      - GitBucket
       - DefaultCachePolicy
     Properties:
       DistributionConfig:
         Enabled: true
         Origins:
-          - Id: IndexBucket
-            DomainName: !GetAtt IndexBucket.DomainName
+          - Id: GitBucket
+            DomainName: !GetAtt GitBucket.DomainName
             S3OriginConfig:
               OriginAccessIdentity: '' # Optionally, you can provide an OAI (Origin Access Identity) for private access
         DefaultCacheBehavior:
-          TargetOriginId: IndexBucket
+          TargetOriginId: GitBucket
           ViewerProtocolPolicy: allow-all
           CachePolicyId: !Ref DefaultCachePolicy
         ViewerCertificate:
@@ -26,7 +26,7 @@ Resources:
   IndexBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: cloudformationbucket21245
+      BucketName: cloudformationbucket84352
       PublicAccessBlockConfiguration:
         BlockPublicAcls: false
         BlockPublicPolicy: false
@@ -45,7 +45,7 @@ Resources:
     Type: AWS::CloudFront::CachePolicy
     Properties:
       CachePolicyConfig:
-        Name: index-cache-policy
+        Name: git-cache-policy
         DefaultTTL: 10
         MaxTTL: 10
         MinTTL: 1
