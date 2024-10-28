@@ -78,6 +78,20 @@ Resources:
         - Key: Name
           Value: MyNewServer
 
+  MySecret:
+    Type: AWS::SecretsManager::Secret
+    Properties: 
+      Name: MyGeneratedSecret
+      Description: This is an automatically generated secret.
+      GenerateSecretString:
+        SecretStringTemplate: '{"username":"myUsername"}'  # Template for the secret
+        GenerateStringKey: password  # Key for the generated value
+        PasswordLength: 16  # Length of the generated password
+        ExcludeCharacters: '"@/\\'  # Characters to exclude from the generated password
+      Tags:
+        - Key: Environment
+          Value: Production
+
 Outputs:
   CloudFrontURL:
     Value: https://drf2mowams5v2.cloudfront.net
