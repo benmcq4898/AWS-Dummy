@@ -23,7 +23,7 @@ Resources:
         PriceClass: PriceClass_100 # Optional, to define the price class for the distribution
         Comment: My CloudFront Distribution with S3 Origin
 
-  IndexBucket:
+  GitBucket:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: cloudformationbucket84352
@@ -58,6 +58,41 @@ Resources:
             HeaderBehavior: none
           QueryStringsConfig:
             QueryStringBehavior: none
+
+  MySecret:
+    Type: AWS::SecretsManager::Secret
+    Properties: 
+      Name: MyGeneratedSecret
+      Description: This is an automatically generated secret.
+      GenerateSecretString:
+        SecretStringTemplate: '{"username":"myUsername"}'  # Template for the secret
+        GenerateStringKey: password  # Key for the generated value
+        PasswordLength: 16  # Length of the generated password
+        ExcludeCharacters: '"@/\\'  # Characters to exclude from the generated password
+      Tags:
+        - Key: Environment
+          Value: Production
+
+  RDSInstance:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBName: mydb
+      AllocatedStorage: '5'
+      DBInstanceClass: db.t3.micro
+      Engine: postgres
+      MasterUsername: !Join ['', ['{{resolve:secretsmanager:', !Ref MySecret, ':SecretString:username}}' ]]
+      MasterUserPassword: !Join ['', ['{{resolve:secretsmanager:', !Ref MySecret, ':SecretString:password}}' ]]
+
+  MyNewServer:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-0ddc798b3f1a5117e 
+      InstanceType: t2.micro
+      Tags:
+        - Key: Name
+          Value: MyNewServer
+
+  
 
 Outputs:
   CloudFrontURL:
