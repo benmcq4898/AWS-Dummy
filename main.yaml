@@ -59,25 +59,6 @@ Resources:
           QueryStringsConfig:
             QueryStringBehavior: none
 
-  RDSInstance:
-    Type: AWS::RDS::DBInstance
-    Properties:
-      DBName: mydb
-      AllocatedStorage: '5'
-      DBInstanceClass: db.t3.micro
-      Engine: postgres
-      MasterUsername: '{{resolve:secretsmanager:rds!db-7cd8f11f-c12d-46f9-b2d0-a29693f37822:SecretString:username}}'
-      MasterUserPassword: '{{resolve:secretsmanager:rds!db-7cd8f11f-c12d-46f9-b2d0-a29693f37822:SecretString:password}}'
-
-  MyNewServer:
-    Type: AWS::EC2::Instance
-    Properties:
-      ImageId: ami-0ddc798b3f1a5117e 
-      InstanceType: t2.micro
-      Tags:
-        - Key: Name
-          Value: MyNewServer
-
   MySecret:
     Type: AWS::SecretsManager::Secret
     Properties: 
@@ -91,6 +72,27 @@ Resources:
       Tags:
         - Key: Environment
           Value: Production
+
+  RDSInstance:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBName: mydb
+      AllocatedStorage: '5'
+      DBInstanceClass: db.t3.micro
+      Engine: postgres
+      MasterUsername: !Join ['', ['{{resolve:secretsmanager:', !Ref MySecret, ':SecretString:username}}' ]]
+      MasterUserPassword: !Join ['', ['{{resolve:secretsmanager:', !Ref MySecret, ':SecretString:password}}' ]]
+
+  MyNewServer:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-0ddc798b3f1a5117e 
+      InstanceType: t2.micro
+      Tags:
+        - Key: Name
+          Value: MyNewServer
+
+  
 
 Outputs:
   CloudFrontURL:
