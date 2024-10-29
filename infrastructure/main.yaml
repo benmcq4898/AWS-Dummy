@@ -23,10 +23,10 @@ Resources:
         PriceClass: PriceClass_100 # Optional, to define the price class for the distribution
         Comment: My CloudFront Distribution with S3 Origin
 
-  GitBucket:
+  AutomatedBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: cloudformationbucket84352
+      BucketName: TestingBucket123
       PublicAccessBlockConfiguration:
         BlockPublicAcls: false
         BlockPublicPolicy: false
