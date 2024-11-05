@@ -77,6 +77,7 @@ Resources:
     Type: AWS::RDS::DBInstance
     Properties:
       DBName: mydb
+      DBSubnetGroupName: default-vpc-0ca61135c31726f31
       AllocatedStorage: '5'
       DBInstanceClass: db.t3.micro
       Engine: postgres
