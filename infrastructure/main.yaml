@@ -1,4 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
+
 Resources:
 
   MyCloudFrontDistribution:
@@ -22,11 +23,187 @@ Resources:
           CloudFrontDefaultCertificate: true
         PriceClass: PriceClass_100 # Optional, to define the price class for the distribution
         Comment: My CloudFront Distribution with S3 Origin
+  
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      Tags:
+        - Key: Name
+          Value: my-dummy-vpc
 
-  IndexBucket:
+  PublicSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Select [0, !GetAZs '']
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.0.0/24
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: my-public-subnet
+        - Key: AZ
+          Value: !Select [0, !GetAZs '']
+
+  BastionSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: ec2-bastion-sg
+      GroupDescription: 'Security group for bastion host'
+      VpcId: !Ref VPC
+
+  BastionAllowInboundSSHFromInternet:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref BastionSecurityGroup
+      IpProtocol: tcp
+      FromPort: 22
+      ToPort: 22
+      CidrIp: 0.0.0.0/0
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: my-dummy-igw
+
+  VPCGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref InternetGateway
+      VpcId: !Ref VPC
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: my-public-dummy-rt
+
+  InternetRoute:
+    Type: AWS::EC2::Route
+    DependsOn: VPCGatewayAttachment
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  SubnetRouteTableAssociationAZ1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet
+
+  BastionInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-0984f4b9e98be44bf
+      InstanceType: t2.micro
+      KeyName: MyBastionKP
+      SubnetId: !Ref PublicSubnet
+      SecurityGroupIds:
+        - !Ref BastionSecurityGroup
+      Tags:
+        - Key: Name
+          Value: MyBastionHost
+
+  PrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: us-east-1a
+      CidrBlock: 10.0.1.0/24
+      Tags:
+        - Key: Name
+          Value: my-private-subnet-01
+        - Key: AZ
+          Value: us-east-1a
+
+  PrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: us-east-1b
+      CidrBlock: 10.0.2.0/24
+      Tags:
+        - Key: Name
+          Value: my-private-subnet-02
+        - Key: AZ
+          Value: us-east-1b
+
+  PrivateRouteTable1:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: my-private-dummy-rt-01
+
+  PrivateSubnetRouteTableAssociationAZ1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable1
+      SubnetId: !Ref PrivateSubnet1
+
+  PrivateRouteTable2:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: my-private-dummy-rt-02
+
+  PrivateSubnetRouteTableAssociationAZ2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable2
+      SubnetId: !Ref PrivateSubnet2
+
+  DBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: 'Subnet group for DB Cluster'
+      SubnetIds:
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
+      Tags: 
+      - 
+        Key: Name
+        Value: DBSubnetGroup 
+  
+  DatabaseSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: dummy-database-sg
+      GroupDescription: 'Security group for core database'
+      VpcId: !Ref VPC
+
+  # DbSecurityByEC2SecurityGroup: 
+  #   Type: AWS::RDS::DBSecurityGroup
+  #   Properties: 
+  #     GroupDescription: "Ingress for Amazon EC2 security group"
+  #     DBSecurityGroupIngress: 
+  #       - 
+  #         EC2SecurityGroupId: !Ref BastionSecurityGroup
+
+  DatabaseAllowInboundFromBastion:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref DatabaseSecurityGroup
+      IpProtocol: tcp
+      FromPort: 5432
+      ToPort: 5432
+      SourceSecurityGroupId:
+        Fn::GetAtt:
+          - DatabaseSecurityGroup
+          - GroupId
+
+  GitBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: cloudformationbucket84352
+      BucketName: index-bucket-10101
       PublicAccessBlockConfiguration:
         BlockPublicAcls: false
         BlockPublicPolicy: false
@@ -59,7 +236,35 @@ Resources:
           QueryStringsConfig:
             QueryStringBehavior: none
 
+  DummyRDSInstance:
+    Type: AWS::RDS::DBInstance
+    DeletionPolicy: Snapshot
+    Properties:
+      DBInstanceIdentifier: dummy-cloudformation-postgresql
+      DBName: DummyPostgresql
+      Engine: postgres
+      MultiAZ: false
+      DBInstanceClass: db.t4g.micro
+      AllocatedStorage: '20'
+      MasterUsername: admin123
+      MasterUserPassword: password121
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      # DBSecurityGroups: !Ref DbSecurityByEC2SecurityGroup
+
+  DummyEC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-0984f4b9e98be44bf
+      InstanceType: t2.micro
+      KeyName: MyBastionKP
+      SubnetId: !Ref PrivateSubnet1
+      SecurityGroupIds:
+        - !Ref BastionSecurityGroup
+      Tags:
+        - Key: Name
+          Value: MyDummyEC2
+
 Outputs:
   CloudFrontURL:
     Value: https://drf2mowams5v2.cloudfront.net
-    Description: URL of the CloudFront distribution 
+    Description: URL of the CloudFront distribution
