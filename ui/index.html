@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hello World</title>
+<script>
+    async function getData() {
+        try {
+            const response = await fetch("https://api.benmcquade.link")
+            if (!response.ok) {
+            throw new Error(`Response status: ${response.status}`);
+            }
+
+            const json = await response.json();
+            document.getElementById('testId').innerText = json.text;
+            console.log(json);
+        } catch (error) {
+            console.error(error.message);
+        }
+    }
+    getData();
+</script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #F4F4F9;
+            color: #333;
+        }
+        h1 {
+            font-size: 3em;
+            color: #D9534F;
+        }
+    </style>
+</head>
+<body>
+    <h1>Hello World</h1>
+<div id="testId"> </div>
+</body>
+</html>
