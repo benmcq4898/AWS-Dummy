@@ -23,7 +23,8 @@ Resources:
           CloudFrontDefaultCertificate: true
         PriceClass: PriceClass_100 # Optional, to define the price class for the distribution
         Comment: My CloudFront Distribution with S3 Origin
-  
+        CustomOriginConfig: 
+
   VPC:
     Type: AWS::EC2::VPC
     Properties:
@@ -35,21 +36,30 @@ Resources:
   PublicSubnet:
     Type: AWS::EC2::Subnet
     Properties:
-      AvailabilityZone: !Select [0, !GetAZs '']
+      AvailabilityZone: us-east-1a
       VpcId: !Ref VPC
       CidrBlock: 10.0.0.0/24
       MapPublicIpOnLaunch: true
       Tags:
         - Key: Name
-          Value: my-public-subnet
-        - Key: AZ
-          Value: !Select [0, !GetAZs '']
+          Value: my-public-subnet-01
+
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: us-east-1b
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.16.0/20
+      MapPublicIpOnLaunch: true
+      Tags:
+      - Key: Name
+        Value: my-public-subnet-02
 
   BastionSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupName: ec2-bastion-sg
-      GroupDescription: 'Security group for bastion host'
+      GroupDescription: Security group for bastion host
       VpcId: !Ref VPC
 
   BastionAllowInboundSSHFromInternet:
@@ -164,20 +174,19 @@ Resources:
   DBSubnetGroup:
     Type: AWS::RDS::DBSubnetGroup
     Properties:
-      DBSubnetGroupDescription: 'Subnet group for DB Cluster'
+      DBSubnetGroupDescription: Subnet group for DB Cluster
       SubnetIds:
         - !Ref PrivateSubnet1
         - !Ref PrivateSubnet2
-      Tags: 
-      - 
-        Key: Name
-        Value: DBSubnetGroup 
-  
+      Tags:
+        - Key: Name
+          Value: DBSubnetGroup
+
   DatabaseSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupName: dummy-database-sg
-      GroupDescription: 'Security group for core database'
+      GroupDescription: Security group for core database
       VpcId: !Ref VPC
 
   # DbSecurityByEC2SecurityGroup: 
@@ -195,10 +204,7 @@ Resources:
       IpProtocol: tcp
       FromPort: 5432
       ToPort: 5432
-      SourceSecurityGroupId:
-        Fn::GetAtt:
-          - DatabaseSecurityGroup
-          - GroupId
+      SourceSecurityGroupId: !GetAtt DatabaseSecurityGroup.GroupId
 
   GitBucket:
     Type: AWS::S3::Bucket
@@ -263,6 +269,101 @@ Resources:
       Tags:
         - Key: Name
           Value: MyDummyEC2
+          
+  ALBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow HTTP and HTTPS traffic
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+
+  ALB:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: MyDummyALB
+      Scheme: internet-facing
+      Subnets:
+        - !Ref PublicSubnet
+        - !Ref PublicSubnet2
+      SecurityGroups:
+        - !Ref ALBSecurityGroup
+      Type: application
+  
+  ALBTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: DummyTG
+      Protocol: HTTP
+      Port: 80
+      VpcId: !Ref VPC
+      TargetType: instance
+      HealthCheckProtocol: HTTP
+      HealthCheckPort: traffic-port
+      HealthCheckPath: /
+      HealthCheckIntervalSeconds: 30
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 3
+      UnhealthyThresholdCount: 2
+      Targets:
+        - Id: !Ref DummyEC2Instance
+          Port: 3000
+  
+  ALBListener01:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref ALBTargetGroup
+      LoadBalancerArn: !Ref ALB
+      Port: 80
+      Protocol: HTTP
+      
+  ALBListener02:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref ALBTargetGroup
+      LoadBalancerArn: !Ref ALB
+      Port: 443
+      Protocol: HTTPS
+      Certificates:
+        - CertificateArn: arn:aws:acm:us-east-1:408639794947:certificate/edf47a05-894f-46e7-987d-58199bd101fd 
+
+  HostedZone:
+    Type: AWS::Route53::HostedZone
+    Properties:
+      Name: benmcquade.link
+
+  ARecord01:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref HostedZone
+      Name: benmcquade.link.
+      Type: A
+      AliasTarget:
+        DNSName: "dji5iwiu2d9n6.cloudfront.net."
+        HostedZoneId: Z2FDTNDATAQYW2
+        EvaluateTargetHealth: true
+    
+  ARecord02:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref HostedZone
+      Name: api.benmcquade.link.
+      Type: A
+      AliasTarget: 
+        DNSName: !GetAtt ALB.DNSName
+        HostedZoneId: !GetAtt ALB.CanonicalHostedZoneID
+        EvaluateTargetHealth: true
 
 Outputs:
   CloudFrontURL:
