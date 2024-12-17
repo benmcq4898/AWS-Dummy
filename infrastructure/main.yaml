@@ -350,7 +350,7 @@ Resources:
       Name: benmcquade.link.
       Type: A
       AliasTarget:
-        DNSName: "dji5iwiu2d9n6.cloudfront.net."
+        DNSName: !Sub "${MyCloudFrontDistribution.DomainName}."
         HostedZoneId: Z2FDTNDATAQYW2
         EvaluateTargetHealth: true
     
