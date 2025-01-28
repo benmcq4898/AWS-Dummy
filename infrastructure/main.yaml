@@ -23,7 +23,6 @@ Resources:
           CloudFrontDefaultCertificate: true
         PriceClass: PriceClass_100 # Optional, to define the price class for the distribution
         Comment: My CloudFront Distribution with S3 Origin
-        CustomOriginConfig: 
 
   VPC:
     Type: AWS::EC2::VPC
@@ -266,6 +265,23 @@ Resources:
       SubnetId: !Ref PrivateSubnet1
       SecurityGroupIds:
         - !Ref BastionSecurityGroup
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          # Update the system and install dependencies
+          yum update -y
+          
+          # Check if SSM Agent is installed (Amazon Linux or RHEL based)
+          if ! command -v amazon-ssm-agent &> /dev/null; then
+            echo "SSM Agent not found, installing..."
+            # Install the SSM Agent (for Amazon Linux / RHEL / CentOS)
+            yum install -y https://amazon-ssm-${us-east-1}.s3.${us-east-1}.amazonaws.com/latest/linux_amd64/amazon-ssm-agent.rpm
+            # Start and enable the SSM Agent service
+            systemctl start amazon-ssm-agent
+            systemctl enable amazon-ssm-agent
+          else
+            echo "SSM Agent already installed."
+          fi
       Tags:
         - Key: Name
           Value: MyDummyEC2
