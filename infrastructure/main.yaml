@@ -265,31 +265,6 @@ Resources:
       SubnetId: !Ref PrivateSubnet1
       SecurityGroupIds:
         - !Ref BastionSecurityGroup
-      UserData:
-        Fn::Base64: !Sub |
-          #!/bin/bash
-          # Check if the SSM Agent is installed
-          if ! command -v amazon-ssm-agent &> /dev/null; then
-            echo "SSM Agent not found, installing..."
-            # Update package list
-            apt-get update -y
-            # Install necessary dependencies (e.g., curl/wget)
-            apt-get install -y curl wget
-            # Install the SSM Agent (for Ubuntu)
-            apt-get install -y amazon-ssm-agent
-            # Start and enable the SSM Agent service
-            systemctl start amazon-ssm-agent
-            systemctl enable amazon-ssm-agent
-            # Check if the service started successfully
-            if systemctl is-active --quiet amazon-ssm-agent; then
-              echo "SSM Agent installed and started successfully."
-            else
-              echo "Failed to start SSM Agent service."
-              exit 1
-            fi
-          else
-            echo "SSM Agent already installed."
-          fi
       Tags:
         - Key: Name
           Value: MyDummyEC2
