@@ -23,7 +23,6 @@ Resources:
           CloudFrontDefaultCertificate: true
         PriceClass: PriceClass_100 # Optional, to define the price class for the distribution
         Comment: My CloudFront Distribution with S3 Origin
-        CustomOriginConfig: 
 
   VPC:
     Type: AWS::EC2::VPC
@@ -111,7 +110,7 @@ Resources:
     Properties:
       ImageId: ami-0984f4b9e98be44bf
       InstanceType: t2.micro
-      KeyName: MyBastionKP
+      KeyName: BastionKP
       SubnetId: !Ref PublicSubnet
       SecurityGroupIds:
         - !Ref BastionSecurityGroup
@@ -262,10 +261,35 @@ Resources:
     Properties:
       ImageId: ami-0984f4b9e98be44bf
       InstanceType: t2.micro
-      KeyName: MyBastionKP
+      KeyName: BastionKP
       SubnetId: !Ref PrivateSubnet1
       SecurityGroupIds:
         - !Ref BastionSecurityGroup
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          # Check if the SSM Agent is installed
+          if ! command -v amazon-ssm-agent &> /dev/null; then
+            echo "SSM Agent not found, installing..."
+            # Update package list
+            apt-get update -y
+            # Install necessary dependencies (e.g., curl/wget)
+            apt-get install -y curl wget
+            # Install the SSM Agent (for Ubuntu)
+            apt-get install -y amazon-ssm-agent
+            # Start and enable the SSM Agent service
+            systemctl start amazon-ssm-agent
+            systemctl enable amazon-ssm-agent
+            # Check if the service started successfully
+            if systemctl is-active --quiet amazon-ssm-agent; then
+              echo "SSM Agent installed and started successfully."
+            else
+              echo "Failed to start SSM Agent service."
+              exit 1
+            fi
+          else
+            echo "SSM Agent already installed."
+          fi
       Tags:
         - Key: Name
           Value: MyDummyEC2

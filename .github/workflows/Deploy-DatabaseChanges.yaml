@@ -1,0 +1,50 @@
+name: Apply Database Adjustments
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'migrations/**' 
+
+jobs:
+  apply-migrations:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the repository to access database migration files
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      # Step 2: Set up Flyway CLI
+      - name: Set up Flyway CLI
+        uses: flyway/flyway-action@v2.0
+        with:
+          version: "8.5.0"  
+
+      # Step 3: Set up SSH to connect to the Bastion Host
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      # Step 4: Connect to the Bastion host and execute the Flyway migration
+      - name: Run Flyway migrations through Bastion host
+        env:
+          FLYWAY_URL: jdbc:postgresql://${{ secrets.DB_HOST }}:5432/${{ secrets.DB_NAME }}
+          FLYWAY_USER: ${{ secrets.DEV_DB_USER }}
+          FLYWAY_PASSWORD: ${{ secrets.DEV_DB_PASSWORD }}
+          BASTION_HOST: ${{ secrets.BASTION_HOST }}
+          DB_HOST: ${{ secrets.DEV_DB_URL }} 
+        run: |
+          # SSH into Bastion and run Flyway migration command
+          ssh -o StrictHostKeyChecking=no -i ${{ secrets.SSH_PRIVATE_KEY }} ec2-user@$BASTION_HOST "
+            export PGPASSWORD=${{ secrets.DEV_DB_PASSWORD }} && 
+            flyway migrate -url=jdbc:postgresql://$DEV_DB_URL:5432/$FLYWAY_URL -user=$FLYWAY_USER -password=$FLYWAY_PASSWORD
+          "
+
+      # Step 5: Output the results
+      - name: Display Flyway migration results
+        run: |
+          echo "Flyway migration complete. You can now check schema changes in RDS."
+
