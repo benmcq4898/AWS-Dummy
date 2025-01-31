@@ -5,18 +5,18 @@ Resources:
   MyCloudFrontDistribution:
     Type: AWS::CloudFront::Distribution
     DependsOn:
-      - GitBucket
+      - S3Bucket
       - DefaultCachePolicy
     Properties:
       DistributionConfig:
         Enabled: true
         Origins:
-          - Id: GitBucket
-            DomainName: !GetAtt GitBucket.DomainName
+          - Id: S3Bucket
+            DomainName: !GetAtt S3Bucket.DomainName
             S3OriginConfig:
               OriginAccessIdentity: '' # Optionally, you can provide an OAI (Origin Access Identity) for private access
         DefaultCacheBehavior:
-          TargetOriginId: GitBucket
+          TargetOriginId: S3Bucket
           ViewerProtocolPolicy: allow-all
           CachePolicyId: !Ref DefaultCachePolicy
         ViewerCertificate:
@@ -206,10 +206,10 @@ Resources:
       ToPort: 5432
       SourceSecurityGroupId: !GetAtt DatabaseSecurityGroup.GroupId
 
-  GitBucket:
+  S3Bucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: index-bucket-10101
+      BucketName: ui-bucket
       PublicAccessBlockConfiguration:
         BlockPublicAcls: false
         BlockPublicPolicy: false
