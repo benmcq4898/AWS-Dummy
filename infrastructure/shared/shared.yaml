@@ -85,7 +85,7 @@ Resources:
     Properties:
       ImageId: ami-0984f4b9e98be44bf
       InstanceType: t2.micro
-      KeyName: !Ref EC2KeyPair.KeyName
+      KeyName: !Ref EC2KeyPair
       SubnetId: !Ref PublicSubnet1
       SecurityGroupIds:
         - !Ref BastionSecurityGroup
@@ -220,6 +220,6 @@ Outputs:
       Name: !Sub "${AWS::StackName}-BastionSecurityGroupId"
   EC2KeyPairName:
     Description: The name of the EC2 Key Pair
-    Value: !Ref EC2KeyPair.KeyName
+    Value: !Ref EC2KeyPair
     Export:
       Name: !Sub "${AWS::StackName}-EC2KeyPairName"
