@@ -68,7 +68,7 @@ Resources:
     Type: AWS::Route53::RecordSet
     Properties:
       HostedZoneId: Fn::ImportValue: !Sub "${SharedStackName}-HostedZoneId"
-      !Sub "${Environment}.benmcquade.link."
+      Name: !Sub "${Environment}.api.benmcquade.link."
       Type: A
       AliasTarget:
         DNSName: !Sub "${CloudFrontDistribution.DomainName}."
