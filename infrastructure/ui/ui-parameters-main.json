@@ -1,0 +1,10 @@
+[
+    {
+        "ParameterKey": "Environment",
+        "ParameterValue": "main"
+    },
+    {
+        "ParameterKey": "SharedStackName",
+        "ParameterValue": "main-shared-infrastructure"
+    }
+]

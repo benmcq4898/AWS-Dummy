@@ -1,0 +1,76 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  Environment:
+    Type: String
+    Description: The Environment being targetted
+    Default: main
+  SharedStackName:
+    Type: String
+    Description: The Cloudformation Stack for the Shared Infrastructure
+    Default: main-shared-infrastructure
+Resources:
+  UIS3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "${Environment}-ui-bucket"
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
+      VersioningConfiguration:
+        Status: Enabled
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      WebsiteConfiguration:
+        IndexDocument: index.html
+  DefaultCachePolicy:
+    Type: AWS::CloudFront::CachePolicy
+    Properties:
+      CachePolicyConfig:
+        Name: !Sub "${Environment}-cf-cache-policy"
+        DefaultTTL: 10
+        MaxTTL: 10
+        MinTTL: 1
+        ParametersInCacheKeyAndForwardedToOrigin:
+          CookiesConfig:
+            CookieBehavior: none
+          EnableAcceptEncodingBrotli: true
+          EnableAcceptEncodingGzip: true
+          HeadersConfig:
+            HeaderBehavior: none
+          QueryStringsConfig:
+            QueryStringBehavior: none
+  CloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    DependsOn:
+      - UIS3Bucket
+      - DefaultCachePolicy
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        Origins:
+          - Id: UIS3Bucket
+            DomainName: !GetAtt UIS3Bucket.DomainName
+            S3OriginConfig:
+              OriginAccessIdentity: ''
+        DefaultCacheBehavior:
+          TargetOriginId: UIS3Bucket
+          ViewerProtocolPolicy: allow-all
+          CachePolicyId: !Ref DefaultCachePolicy
+        ViewerCertificate:
+          CloudFrontDefaultCertificate: true
+        PriceClass: PriceClass_100 
+        Comment: Distribution for Application UI
+  ARecord01:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: Fn::ImportValue: !Sub "${SharedStackName}-HostedZoneId"
+      !Sub "${Environment}.benmcquade.link."
+      Type: A
+      AliasTarget:
+        DNSName: !Sub "${CloudFrontDistribution.DomainName}."
+        HostedZoneId: Z2FDTNDATAQYW2
+        EvaluateTargetHealth: true
