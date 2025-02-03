@@ -9,16 +9,12 @@ Parameters:
     Description: The Cloudformation Stack for the Shared Infrastructure
     Default: main-shared-infrastructure
 Resources:
-  EC2KeyPair:
-    Type: 'AWS::EC2::KeyPair'
-    Properties:
-      KeyName: !Sub "${Environment}-Bastion-KP"
   EC2Instance:
     Type: AWS::EC2::Instance
     Properties:
       ImageId: ami-0984f4b9e98be44bf
       InstanceType: t2.micro
-      KeyName: !Ref EC2KeyPair
+      KeyName: Fn::ImportValue: !Sub "${SharedStackName}-EC2KeyPairName"    
       SubnetId: Fn::ImportValue: !Sub "${SharedStackName}-HostedZoneId"
       SecurityGroupIds:
         - Fn::ImportValue: !Sub "${SharedStackName}-BastionSecurityGroupId"    

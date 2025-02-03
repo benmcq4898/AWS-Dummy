@@ -76,12 +76,16 @@ Resources:
     Properties:
       RouteTableId: !Ref PublicRouteTable
       SubnetId: !Ref PublicSubnet1
+  EC2KeyPair:
+    Type: 'AWS::EC2::KeyPair'
+    Properties:
+      KeyName: !Sub "${Environment}-Bastion-KP"
   BastionInstance:
     Type: AWS::EC2::Instance
     Properties:
       ImageId: ami-0984f4b9e98be44bf
       InstanceType: t2.micro
-      KeyName: BastionKP
+      KeyName: !Ref EC2KeyPair.KeyName
       SubnetId: !Ref PublicSubnet1
       SecurityGroupIds:
         - !Ref BastionSecurityGroup
@@ -169,7 +173,7 @@ Resources:
     Type: AWS::RDS::DBInstance
     DeletionPolicy: Snapshot
     Properties:
-      DBInstanceIdentifier: !Sub "${Environment}appdatabase"
+      DBInstanceIdentifier: !Sub "${Environment}_app_database"
       DBName: !Sub "${Environment}-app-database"
       Engine: postgres
       MultiAZ: false
@@ -214,3 +218,8 @@ Outputs:
     Value: !Ref BastionSecurityGroup
     Export:
       Name: !Sub "${AWS::StackName}-BastionSecurityGroupId"
+  EC2KeyPairName:
+    Description: The name of the EC2 Key Pair
+    Value: !Ref EC2KeyPair.KeyName
+    Export:
+      Name: !Sub "${AWS::StackName}-EC2KeyPairName"

@@ -1,1 +1,3 @@
 .github/workflows/migrations_deploy.yml
+
+.DS_Store
