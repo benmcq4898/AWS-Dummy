@@ -173,7 +173,7 @@ Resources:
     Type: AWS::RDS::DBInstance
     DeletionPolicy: Snapshot
     Properties:
-      DBInstanceIdentifier: !Sub "${Environment}_app_database"
+      DBInstanceIdentifier: !Sub "${Environment}-app-database"
       DBName: !Sub "${Environment}-app-database"
       Engine: postgres
       MultiAZ: false
