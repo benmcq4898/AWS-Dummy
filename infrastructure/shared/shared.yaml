@@ -4,6 +4,16 @@ Parameters:
     Type: String
     Description: The Environment being targetted
     Default: main
+  Region:
+    Type: String
+    Description: The Environment being targetted
+    Default: us-east
+  Domain:
+    Type: String
+    Description: The Domain used for hosting
+  LatestAmiId:
+    Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
+    Default: '/aws/service/ami-amazon-linux-latest/al2023-ami-minimal-kernel-default-x86_64'
 Resources:
   VPC:
     Type: AWS::EC2::VPC
@@ -15,7 +25,7 @@ Resources:
   PublicSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
-      AvailabilityZone: us-east-1a
+      AvailabilityZone: !Sub "${Region}-1a"
       VpcId: !Ref VPC
       CidrBlock: 10.0.0.0/24
       MapPublicIpOnLaunch: true
@@ -25,7 +35,7 @@ Resources:
   PublicSubnet2:
     Type: AWS::EC2::Subnet
     Properties:
-      AvailabilityZone: us-east-1b
+      AvailabilityZone: !Sub "${Region}-1b"
       VpcId: !Ref VPC
       CidrBlock: 10.0.16.0/20
       MapPublicIpOnLaunch: true
@@ -83,8 +93,8 @@ Resources:
   BastionInstance:
     Type: AWS::EC2::Instance
     Properties:
-      ImageId: ami-0984f4b9e98be44bf
       InstanceType: t2.micro
+      ImageId: !Ref LatestAmiId
       KeyName: !Ref EC2KeyPair
       SubnetId: !Ref PublicSubnet1
       SecurityGroupIds:
@@ -96,8 +106,8 @@ Resources:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPC
-      AvailabilityZone: us-east-1a
       CidrBlock: 10.0.1.0/24
+      AvailabilityZone: !Sub "${Region}-1a"
       Tags:
         - Key: Name
           Value: !Sub "${Environment}-private-subnet-01"
@@ -107,8 +117,8 @@ Resources:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPC
-      AvailabilityZone: us-east-1b
       CidrBlock: 10.0.2.0/24
+      AvailabilityZone: !Sub "${Region}-1b"
       Tags:
         - Key: Name
           Value: !Sub "${Environment}-private-subnet-01"
@@ -174,7 +184,7 @@ Resources:
     DeletionPolicy: Snapshot
     Properties:
       DBInstanceIdentifier: !Sub "${Environment}-app-database"
-      DBName: !Sub "${Environment}-app-database"
+      DBName: !Sub "${Environment}AppDatabase"
       Engine: postgres
       MultiAZ: false
       DBInstanceClass: db.t4g.micro
@@ -186,7 +196,7 @@ Resources:
   HostedZone:
     Type: AWS::Route53::HostedZone
     Properties:
-      Name: !Sub "${Environment}.benmcquade.link"
+      Name: !Sub "${Domain}"
 Outputs:
   VpcId:
     Description: The ID of the VPC

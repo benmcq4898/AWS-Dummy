@@ -8,21 +8,30 @@ Parameters:
     Type: String
     Description: The Cloudformation Stack for the Shared Infrastructure
     Default: main-shared-infrastructure
+  Domain:
+    Type: String
+    Description: The Domain used for hosting
+  LatestAmiId:
+    Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
+    Default: '/aws/service/ami-amazon-linux-latest/al2023-ami-minimal-kernel-default-x86_64'
 Resources:
   EC2Instance:
     Type: AWS::EC2::Instance
     Properties:
-      ImageId: ami-0984f4b9e98be44bf
+      ImageId: !Ref LatestAmiId
       InstanceType: t2.micro
-      KeyName: Fn::ImportValue: !Sub "${SharedStackName}-EC2KeyPairName"    
-      SubnetId: Fn::ImportValue: !Sub "${SharedStackName}-HostedZoneId"
+      KeyName:
+        Fn::ImportValue: !Sub "${SharedStackName}-EC2KeyPairName"
+      SubnetId: 
+        Fn::ImportValue: !Sub "${SharedStackName}-PrivateSubnet1"
       SecurityGroupIds:
         - Fn::ImportValue: !Sub "${SharedStackName}-BastionSecurityGroupId"    
   ALBSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Allow HTTP and HTTPS traffic
-      VpcId: Fn::ImportValue: !Sub "${SharedStackName}-VPC"
+      VpcId: 
+        Fn::ImportValue: !Sub "${SharedStackName}-VPC"
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 80
@@ -50,7 +59,8 @@ Resources:
       Name: !Sub "${Environment}-Application-TG"
       Protocol: HTTP
       Port: 80
-      VpcId: Fn::ImportValue: !Sub "${SharedStackName}-VPC"   
+      VpcId: 
+        Fn::ImportValue: !Sub "${SharedStackName}-VPC"   
       TargetType: instance
       HealthCheckProtocol: HTTP
       HealthCheckPort: traffic-port
@@ -72,6 +82,15 @@ Resources:
       LoadBalancerArn: !Ref ALB
       Port: 80
       Protocol: HTTP
+  ALBCertificate:
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      DomainName: !Sub "${Environment}.api.${Domain}"
+      ValidationMethod: DNS
+      DomainValidationOptions:
+        - DomainName: !Sub "${Environment}.api.${Domain}"
+          HostedZoneId: 
+            Fn::ImportValue: !Sub "${SharedStackName}-HostedZoneId"
   ALBListener02:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
@@ -82,13 +101,13 @@ Resources:
       Port: 443
       Protocol: HTTPS
       Certificates:
-        # You need to create this certificate
-        - CertificateArn: arn:aws:acm:us-east-1:408639794947:certificate/edf47a05-894f-46e7-987d-58199bd101fd 
+        - CertificateArn: !Ref ALBCertificate
   AlbARecord:
     Type: AWS::Route53::RecordSet
     Properties:
-      HostedZoneId: Fn::ImportValue: !Sub "${SharedStackName}-HostedZoneId"   
-      Name: !Sub "${Environment}.api.benmcquade.link."
+      HostedZoneId: 
+        Fn::ImportValue: !Sub "${SharedStackName}-HostedZoneId"   
+      Name: !Sub "${Environment}.api.${Domain}."
       Type: A
       AliasTarget: 
         DNSName: !GetAtt ALB.DNSName

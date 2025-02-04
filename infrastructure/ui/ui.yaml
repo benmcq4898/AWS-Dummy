@@ -4,6 +4,9 @@ Parameters:
     Type: String
     Description: The Environment being targetted
     Default: main
+  Domain:
+    Type: String
+    Description: The Domain used for hosting
   SharedStackName:
     Type: String
     Description: The Cloudformation Stack for the Shared Infrastructure
@@ -43,11 +46,21 @@ Resources:
             HeaderBehavior: none
           QueryStringsConfig:
             QueryStringBehavior: none
+  CloudFrontCertificate:
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      DomainName: !Sub "${Environment}.${Domain}"
+      ValidationMethod: DNS
+      DomainValidationOptions:
+        - DomainName: !Sub "${Environment}.${Domain}"
+          HostedZoneId: 
+            Fn::ImportValue: !Sub "${SharedStackName}-HostedZoneId"
   CloudFrontDistribution:
     Type: AWS::CloudFront::Distribution
     DependsOn:
       - UIS3Bucket
       - DefaultCachePolicy
+      - CloudFrontCertificate
     Properties:
       DistributionConfig:
         Enabled: true
@@ -58,17 +71,20 @@ Resources:
               OriginAccessIdentity: ''
         DefaultCacheBehavior:
           TargetOriginId: UIS3Bucket
-          ViewerProtocolPolicy: allow-all
+          ViewerProtocolPolicy: redirect-to-https
           CachePolicyId: !Ref DefaultCachePolicy
         ViewerCertificate:
-          CloudFrontDefaultCertificate: true
+          AcmCertificateArn: !Ref CloudFrontCertificate
+          SslSupportMethod: sni-only
+          MinimumProtocolVersion: TLSv1.2_2021
         PriceClass: PriceClass_100 
         Comment: Distribution for Application UI
   ARecord01:
     Type: AWS::Route53::RecordSet
     Properties:
-      HostedZoneId: Fn::ImportValue: !Sub "${SharedStackName}-HostedZoneId"
-      Name: !Sub "${Environment}.api.benmcquade.link."
+      HostedZoneId: 
+        Fn::ImportValue: !Sub "${SharedStackName}-HostedZoneId"
+      Name: !Sub "${Environment}.${Domain}."
       Type: A
       AliasTarget:
         DNSName: !Sub "${CloudFrontDistribution.DomainName}."
