@@ -88,5 +88,5 @@ Resources:
       Type: A
       AliasTarget:
         DNSName: !Sub "${CloudFrontDistribution.DomainName}."
-        HostedZoneId: Z35SXDOTRQ7X7K
+        HostedZoneId: Z04222703H3LXP8YTDOMV
         EvaluateTargetHealth: true
