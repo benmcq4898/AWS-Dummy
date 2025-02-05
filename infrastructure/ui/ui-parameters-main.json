@@ -6,5 +6,9 @@
     {
         "ParameterKey": "SharedStackName",
         "ParameterValue": "main-shared-infrastructure"
+    },
+    {
+        "ParameterKey": "Domain",
+        "ParameterValue": "bedmcquade.link"
     }
 ]
