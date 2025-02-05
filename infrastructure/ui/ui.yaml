@@ -15,7 +15,7 @@ Resources:
   UIS3Bucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub "${Environment}-ui-bucket"
+      BucketName: !Sub "${Environment}-web-bucket"
       PublicAccessBlockConfiguration:
         BlockPublicAcls: false
         BlockPublicPolicy: false
