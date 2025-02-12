@@ -83,10 +83,11 @@ Resources:
     Type: AWS::Route53::RecordSet
     Properties:
       HostedZoneId: 
-        Fn::ImportValue: !Sub "${SharedStackName}-HostedZoneId"
+         Fn::ImportValue: !Sub "${SharedStackName}-HostedZoneId"  
+
       Name: !Sub "${Environment}.${Domain}."
       Type: A
       AliasTarget:
         DNSName: !Sub "${CloudFrontDistribution.DomainName}."
-        HostedZoneId: Z04222703H3LXP8YTDOMV
+        HostedZoneId: Z2FDTNDATAQYW2
         EvaluateTargetHealth: true
