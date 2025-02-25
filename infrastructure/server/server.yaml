@@ -31,8 +31,7 @@ Resources:
         Fn::ImportValue: !Sub "${SharedStackName}-EC2KeyPairName"
       SubnetId: 
         Fn::ImportValue: !Sub "${SharedStackName}-PrivateSubnet1"
-      SecurityGroupIds:
-        - Fn::ImportValue: !Sub "${SharedStackName}-PrivateSecurityGroupId" 
+      SecurityGroupIds: !Ref PrivateSecurityGroup
       Tags:
         - Key: Name
           Value: !Sub "${Environment}-private-host"
