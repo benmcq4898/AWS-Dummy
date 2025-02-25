@@ -25,7 +25,10 @@ Resources:
       SubnetId: 
         Fn::ImportValue: !Sub "${SharedStackName}-PrivateSubnet1"
       SecurityGroupIds:
-        - Fn::ImportValue: !Sub "${SharedStackName}-BastionSecurityGroupId"    
+        - Fn::ImportValue: !Sub "${SharedStackName}-BastionSecurityGroupId" 
+      Tags:
+        - Key: Name
+          Value: !Sub "${Environment}-private-host"
   ALBSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
