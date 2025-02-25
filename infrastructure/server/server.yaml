@@ -15,6 +15,12 @@ Parameters:
     Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
     Default: '/aws/service/ami-amazon-linux-latest/al2023-ami-minimal-kernel-default-x86_64'
 Resources:
+  PrivateSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub ${Environment}-ec2-private-sg
+      GroupDescription: Security group for private host
+      VpcId: !Ref VPC
   EC2Instance:
     Type: AWS::EC2::Instance
     Properties:
@@ -25,7 +31,7 @@ Resources:
       SubnetId: 
         Fn::ImportValue: !Sub "${SharedStackName}-PrivateSubnet1"
       SecurityGroupIds:
-        - Fn::ImportValue: !Sub "${SharedStackName}-BastionSecurityGroupId" 
+        - Fn::ImportValue: !Sub "${SharedStackName}-PrivateSecurityGroupId" 
       Tags:
         - Key: Name
           Value: !Sub "${Environment}-private-host"
