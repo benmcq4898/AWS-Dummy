@@ -13,7 +13,7 @@ Parameters:
     Description: The Domain used for hosting
   LatestAmiId:
     Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
-    Default: '/aws/service/ami-amazon-linux-latest/al2023-ami-minimal-kernel-default-x86_64'
+    Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2
 Resources:
   PrivateSecurityGroup:
     Type: AWS::EC2::SecurityGroup
