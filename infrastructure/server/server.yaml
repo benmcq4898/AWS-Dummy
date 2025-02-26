@@ -20,7 +20,8 @@ Resources:
     Properties:
       GroupName: !Sub ${Environment}-ec2-private-sg
       GroupDescription: Security group for private host
-      VpcId: !Ref VPC
+      VpcId: 
+        Fn::ImportValue: !Sub "${SharedStackName}-VPC"
   EC2Instance:
     Type: AWS::EC2::Instance
     Properties:
@@ -30,8 +31,8 @@ Resources:
         Fn::ImportValue: !Sub "${SharedStackName}-EC2KeyPairName"
       SubnetId: 
         Fn::ImportValue: !Sub "${SharedStackName}-PrivateSubnet1"
-      SecurityGroupIds:
-        - Fn::ImportValue: !Sub "${SharedStackName}-PrivateSecurityGroupId" 
+      SecurityGroupIds: 
+        - !Ref PrivateSecurityGroup
       Tags:
         - Key: Name
           Value: !Sub "${Environment}-private-host"
