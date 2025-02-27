@@ -12,6 +12,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    
       # Checkout the code from the repository
       - name: Checkout code
         uses: actions/checkout@v3
@@ -22,14 +23,21 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      # SSH into the EC2 instance and run deployment commands
-      - name: Deploy to EC2
+      - name: Get EC2 private IP
+        id: get_ip
+        run: |
+          PRIVATE_IP=$(aws ec2 describe-instances --instance-ids $INSTANCE_ID --query "Reservations[0].Instances[0].PrivateIpAddress" --output text)
+          echo "PRIVATE_IP=$PRIVATE_IP" >> $GITHUB_ENV
+
+      - name: SSH to EC2 and deploy
         run: |
           ssh -o StrictHostKeyChecking=no ec2-user@$PRIVATE_IP << 'EOF'
             cd /AWS-Dummy/server
             git pull origin main
             pm2 restart main-private-host || pm2 start main-private-host
           EOF
+        env:
+          PRIVATE_IP: ${{ secrets.PRIVATE_IP }}
 
       # Notify on deployment status
       - name: Notify on success
