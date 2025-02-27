@@ -20,8 +20,10 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Check PRIVATE_IP
-        run: if [ -z "$PRIVATE_IP" ]; then echo "PRIVATE_IP is not set"; exit 1; else echo $PRIVATE_IP; fi
+      - name: Set up SSH keys
+        run: |
+          echo "$SSH_PRIVATE_KEY" > /tmp/private_key.pem
+          chmod 400 /tmp/$PRIVATE_KEY
 
       - name: Deploy to EC2
         run: |
