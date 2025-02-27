@@ -12,11 +12,11 @@ jobs:
     steps:
       # Checkout the code from the repository
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       # Set up SSH keys to access EC2
       - name: Set up SSH
-        uses: webfactory/ssh-agent@v0.5.3
+        uses: webfactory/ssh-agent@v0.5.4
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
@@ -24,7 +24,16 @@ jobs:
       - name: Deploy to EC2
         run: |
           ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
-            cd /path/to/your/app
+            cd /AWS-Dummy/server
             git pull origin main
-            pm2 restart MyDummyEC2
+            pm2 restart main-private-host || pm2 start main-private-host
           EOF
+
+      # Notify on deployment status
+      - name: Notify on success
+        if: success()
+        run: echo "Deployment to EC2 was successful."
+
+      - name: Notify on failure
+        if: failure()
+        run: echo "Deployment to EC2 failed."
