@@ -12,26 +12,25 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout the code from the repository
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Set up SSH keys to access EC2
       - name: Set up SSH
         uses: webfactory/ssh-agent@v0.5.4
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      # SSH into the EC2 instance and run deployment commands
+      - name: Check PRIVATE_IP
+        run: if [ -z "$PRIVATE_IP" ]; then echo "PRIVATE_IP is not set"; exit 1; else echo $PRIVATE_IP; fi
+
       - name: Deploy to EC2
         run: |
-          ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.PRIVATE_IP }} << 'EOF'
+          ssh -o StrictHostKeyChecking=no ec2-user@$PRIVATE_IP << 'EOF'
             cd /AWS-Dummy/server
             git pull origin main
             pm2 restart main-private-host || pm2 start main-private-host
           EOF
 
-      # Notify on deployment status
       - name: Notify on success
         if: success()
         run: echo "Deployment to EC2 was successful."
