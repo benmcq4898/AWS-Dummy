@@ -15,6 +15,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
+      - name: Set up Git configuration
+        run: |
+          git config --global --add safe.directory /home/runner/work/AWS-Dummy/AWS-Dummy
+          git config --global --unset-all http.https://github.com/.extraheader || :
+          git config --global --unset-all core.sshCommand || :
+
+
       - name: Set up Flyway CLI
         run: |
           curl -L https://repo1.maven.org/maven2/org/flywaydb/flyway-commandline/8.5.0/flyway-commandline-8.5.0-linux-x64.tar.gz | tar xvz
@@ -44,3 +51,8 @@ jobs:
       - name: Display Flyway migration results
         run: |
           echo "Flyway migration complete. You can now check schema changes in RDS."
+
+      - name: Post job cleanup
+        run: |
+          git config --global --unset-all http.https://github.com/.extraheader || :
+          git config --global --unset-all core.sshCommand || :
