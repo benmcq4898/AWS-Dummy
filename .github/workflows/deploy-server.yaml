@@ -28,16 +28,17 @@ jobs:
         run: |
           PRIVATE_IP=$(aws ec2 describe-instances --instance-ids $INSTANCE_ID --query "Reservations[0].Instances[0].PrivateIpAddress" --output text)
           echo "PRIVATE_IP=$PRIVATE_IP" >> $GITHUB_ENV
+          echo "PRIVATE_IP=$PRIVATE_IP" >> $GITHUB_ENV
 
       - name: SSH to EC2 and deploy
+        env:
+          PRIVATE_IP: ${{ env.PRIVATE_IP }}
         run: |
           ssh -o StrictHostKeyChecking=no ec2-user@$PRIVATE_IP << 'EOF'
             cd /AWS-Dummy/server
             git pull origin main
             pm2 restart main-private-host || pm2 start main-private-host
           EOF
-        env:
-          PRIVATE_IP: ${{ secrets.PRIVATE_IP }}
 
       # Notify on deployment status
       - name: Notify on success
