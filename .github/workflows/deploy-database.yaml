@@ -22,7 +22,7 @@ jobs:
 
       - name: SSH into Bastion Host and Run Database Migrations
         run: |
-          ssh -o StrictHostKeyChecking=no -i /tmp/bastion_key.pem ec2-user@${{ secrets.BASTION_HOST_IP }} << 'EOF'
+          ssh -o StrictHostKeyChecking=no -i /tmp/bastion_key.pem ec2-user@${{ secrets.BASTION_HOST }} << 'EOF'
             echo "Running migrations on PostgreSQL database"
 
             export DB_HOST=${{ secrets.DEV_DB_HOST }}
