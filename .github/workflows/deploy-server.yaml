@@ -23,7 +23,7 @@ jobs:
       - name: Set up SSH keys
         run: |
           echo "$SSH_PRIVATE_KEY" > /tmp/private_key.pem
-          chmod 400 /tmp/$PRIVATE_KEY
+          chmod 400 $SSH_PRIVATE_KEY
 
       - name: Deploy to EC2
         run: |
