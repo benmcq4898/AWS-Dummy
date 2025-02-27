@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - 'migrations/**'  
+      - 'migrations/**'
 
 jobs:
   deploy:
@@ -19,6 +19,8 @@ jobs:
         run: |
           echo "$SSH_PRIVATE_KEY" > /tmp/bastion_key.pem
           chmod 400 /tmp/bastion_key.pem
+          ls -l /tmp/bastion_key.pem  # Verify key permissions
+          cat /tmp/bastion_key.pem    # Output key content for debugging (remove this in production)
 
       - name: SSH into Bastion Host and Run Database Migrations
         run: |
