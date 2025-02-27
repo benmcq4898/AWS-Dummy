@@ -44,7 +44,7 @@ INSERT INTO programming_languages (language_name) VALUES
 
 -- Example data for Employees (optional)
 INSERT INTO employees (first_name, last_name, email, job_title_id, hire_date) VALUES
-('John', 'Doe', 'john.doe@example.com', 1, '2023-01-15'),
+('Joh', 'Doe', 'john.doe@example.com', 1, '2023-01-15'),
 ('Jane', 'Smith', 'jane.smith@example.com', 2, '2022-08-22'),
 ('Alice', 'Johnson', 'alice.johnson@example.com', 3, '2021-11-10');
 
