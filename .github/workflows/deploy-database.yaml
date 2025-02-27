@@ -15,24 +15,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Set up Git configuration
-        run: |
-          git config --global --add safe.directory /home/runner/work/AWS-Dummy/AWS-Dummy
-          git config --global --unset-all http.https://github.com/.extraheader || :
-          git config --global --unset-all core.sshCommand || :
+      - name: download flyway
+        run: wget https://repo1.maven.org/maven2/org/flywaydb/flyway-commandline/7.8.2/flyway-commandline-7.8.2-linux-x64.tar.gz
 
-      - name: Set up Flyway CLI
-        run: |
-          curl -L https://repo1.maven.org/maven2/org/flywaydb/flyway-commandline/8.5.0/flyway-commandline-8.5.0-linux-x64.tar.gz | tar xvz
-          if [ -d "flyway-8.5.0" ]; then
-            sudo ln -s $(pwd)/flyway-8.5.0/flyway /usr/local/bin/flyway
-            sudo chmod +x /usr/local/bin/flyway
-          else
-            echo "Flyway installation failed."
-            exit 1
-          fi
-     
-          
+      - name: extract flyway
+        run: tar -xvf flyway-commandline-7.8.2-linux-x64.tar.gz && sudo ln -s `pwd`/flyway-7.8.2/flyway /usr/local/bin
+
       - name: Set up SSH
         uses: webfactory/ssh-agent@v0.5.3
         with:
