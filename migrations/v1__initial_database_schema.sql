@@ -38,7 +38,7 @@ INSERT INTO job_titles (title_name) VALUES
 
 -- Insert example data into Programming Languages
 INSERT INTO programming_languages (language_name) VALUES
-('JavaScript'),
+('Java'),
 ('Python'),
 ('TypeScript');
 
