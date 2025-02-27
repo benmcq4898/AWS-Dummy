@@ -21,12 +21,17 @@ jobs:
           git config --global --unset-all http.https://github.com/.extraheader || :
           git config --global --unset-all core.sshCommand || :
 
-
       - name: Set up Flyway CLI
         run: |
           curl -L https://repo1.maven.org/maven2/org/flywaydb/flyway-commandline/8.5.0/flyway-commandline-8.5.0-linux-x64.tar.gz | tar xvz
-          sudo ln -s $(pwd)/flyway-8.5.0/flyway /usr/local/bin/flyway
-          sudo chmod +x /usr/local/bin/flyway
+          if [ -d "flyway-8.5.0" ]; then
+            sudo ln -s $(pwd)/flyway-8.5.0/flyway /usr/local/bin/flyway
+            sudo chmod +x /usr/local/bin/flyway
+          else
+            echo "Flyway installation failed."
+            exit 1
+          fi
+     
           
       - name: Set up SSH
         uses: webfactory/ssh-agent@v0.5.3
