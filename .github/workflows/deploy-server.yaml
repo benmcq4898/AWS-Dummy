@@ -22,14 +22,10 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      # Debug: Check PRIVATE_IP variable
-      - name: Check PRIVATE_IP
-        run: echo $PRIVATE_IP
-
       # SSH into the EC2 instance and run deployment commands
       - name: Deploy to EC2
         run: |
-          ssh -o StrictHostKeyChecking=no ec2-user@$PRIVATE_IP << 'EOF'
+          ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.PRIVATE_IP }} << 'EOF'
             cd /AWS-Dummy/server
             git pull origin main
             pm2 restart main-private-host || pm2 start main-private-host
