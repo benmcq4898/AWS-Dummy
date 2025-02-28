@@ -25,6 +25,7 @@ jobs:
           ssh -o StrictHostKeyChecking=no -A ec2-user@${{ secrets.BASTION_IP }} << 'EOF'
             ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.PRIVATE_IP }} << 'INNER_EOF'
               cd AWS-Dummy/server
+              kill -9 $(lsof -i:3000 -t) 2> /dev/null
               npm start 
             INNER_EOF
           EOF
