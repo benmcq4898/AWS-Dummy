@@ -22,7 +22,7 @@ jobs:
 
       - name: Deploy to EC2
         run: |
-          ssh -o StrictHostKeyChecking=no -A -i $SSH_PRIVATE_KEY ec2-user@$BASTION_IP << 'EOF'
+          ssh -o StrictHostKeyChecking=no -A ec2-user@$BASTION_IP << 'EOF'
             ssh -o StrictHostKeyChecking=no ec2-user@$PRIVATE_IP << 'INNER_EOF'
               cd /AWS-Dummy/server
               git pull origin main
