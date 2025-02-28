@@ -27,8 +27,7 @@ jobs:
               sudo npm install -g pm2
               ls
               cd AWS-Dummy/server
-              git pull origin main
-              pm2 restart main-private-host || pm2 start main-private-host
+              npm start 
             INNER_EOF
           EOF
 
