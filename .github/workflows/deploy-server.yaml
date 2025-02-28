@@ -24,6 +24,7 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no -A ec2-user@${{ secrets.BASTION_IP }} << 'EOF'
             ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.PRIVATE_IP }} << 'INNER_EOF'
+              sudo npm install -g pm2
               ls
               cd AWS-Dummy/server
               git pull origin main
