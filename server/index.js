@@ -5,7 +5,7 @@ const app = express()
 app.use(cors());
 
 app.get('/', function (req, res) {
-  res.json({ text: "Hello World!"})
+  res.json({ text: "Hello World"})
 })
 
 app.listen(3000)
