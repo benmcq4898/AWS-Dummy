@@ -15,16 +15,14 @@ jobs:
       - name: Checkout the repository
         uses: actions/checkout@v2
 
-      - name: Set up SSH key for Bastion Host
-        run: |
-          echo "$SSH_PRIVATE_KEY" > /tmp/bastion_key.pem
-          chmod 400 /tmp/bastion_key.pem
-          ls -l /tmp/bastion_key.pem  # Verify key permissions
-          cat /tmp/bastion_key.pem    # Output key content for debugging (remove this in production)
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.5.4
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
       - name: SSH into Bastion Host and Run Database Migrations
         run: |
-          ssh -o StrictHostKeyChecking=no -i /tmp/bastion_key.pem ec2-user@${{ secrets.BASTION_HOST }} << 'EOF'
+          ssh -o StrictHostKeyChecking=no -A ec2-user@${{ secrets.BASTION_IP }} << 'EOF'
             echo "Running migrations on PostgreSQL database"
 
             export DB_HOST=${{ secrets.DEV_DB_HOST }}
